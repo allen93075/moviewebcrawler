@@ -5,11 +5,14 @@ import json
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 
+
 # Lux cinema
 
-response = requests.get("https://www.luxcinema.com.tw/web/2020.php?type=ShowTimes#type_anchor")
-soup = BeautifulSoup(response.text, "html.parser")
-result = soup.find_all("div", {"class": "col-md-9"})
+def prepare():
+    response = requests.get("https://www.luxcinema.com.tw/web/2020.php?type=ShowTimes#type_anchor")
+    soup = BeautifulSoup(response.text, "html.parser")
+    result = soup.find_all("div", {"class": "col-md-9"})
+    return soup, result
 
 
 def has_class_but_no_id(tag):
@@ -17,7 +20,7 @@ def has_class_but_no_id(tag):
 
 
 # 拿名字
-def get_name():
+def get_name(result):
     name = []
     for i in result:
         n = i.find("h1").text
@@ -29,7 +32,7 @@ def get_name():
 
 
 # 拿URL 還要處理
-def get_href():
+def get_href(soup):
     film_url = []
     f = soup.find("div", {"class": "movie_all_list"})
 
@@ -98,22 +101,23 @@ def get_seat_count(url):
 
 # get_name > get_href >
 # get_time()
+def excute_webcrawler():
+    soup, result = prepare()
+    name = get_name(result)
+    url = get_href(soup)
+    webresult = []
+    for i in range(len(name)):
+        try:
+            dic_1 = {'Name': name[i]}
+            time, seat_url = get_time(url[i])
+            for index in range(len(time)):
+                dic_1['Time'] = time[index]
+                seat = get_seat_count(seat_url[index])
+                dic_1['seat'] = seat
+                webresult.append(dic_1)
+                print(webresult)
 
-name = get_name()
-url = get_href()
-webresult = []
-for i in range(len(name)):
-    try:
-        dic_1 = {'Name': name[i]}
-        time, seat_url = get_time(url[i])
-        for index in range(len(time)):
-            dic_1['Time'] = time[index]
-            seat = get_seat_count(seat_url[index])
-            dic_1['seat'] = seat
-            webresult.append(dic_1)
-            print(webresult)
-    except:
-        pass
-# print(webresult)
+        except:
+            pass
 
-# print(day)
+    return webresult
