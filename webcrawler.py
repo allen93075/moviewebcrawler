@@ -26,7 +26,7 @@ def get_name(result):
         n = i.find("h1").text
         n = n[:-4]
         name.append(n)
-    print(len(name))
+    # print(len(name))
 
     return name
 
@@ -39,13 +39,13 @@ def get_href(soup):
     for i in f.find_all('a'):
         film_url.append("https://www.luxcinema.com.tw/web/" + i.get('href'))
 
-    print(film_url)
+    # print(film_url)
 
     return film_url
 
 
 # 拿到月、日、場次時間
-def get_time(url="https://www.luxcinema.com.tw/web/2020-movie_item.php?film_id=1850"):
+def get_time(url="https://www.luxcinema.com.tw/web/2020-movie_item.php?film_id=1860"):
     day = []
     date_and_time = []
     r = requests.get(url)
@@ -56,17 +56,20 @@ def get_time(url="https://www.luxcinema.com.tw/web/2020-movie_item.php?film_id=1
         day.append(month + "/" + zz.text)
 
     time_list = s.find_all("div", {"class": "time_list"}, limit=2)
-    time1 = []
+    time1 = time_list[0].find_all("b")
     time2 = []
-    for k in time_list:
-        time1 = k.find_all("b")
-        for x in time1:
-            check = x.text
-            check = check[:5]
-            time2.append(check)
-            print(time2)
-        for y in time2:
-            date_and_time.append(day[0] + " " + y)
+    if len(time_list) > 1:
+        time2 = time_list[1].find_all("b")
+
+    for x in time1:
+        check = x.text
+        check = check[:5]
+        time2.append(check)
+        # print(time2)
+    for y in time2:
+        date_and_time.append(day[0] + " " + y)
+
+
 
     # Link for get_seat_count
     link = s.find_all("div", {"class": "time_list"})
@@ -75,6 +78,9 @@ def get_time(url="https://www.luxcinema.com.tw/web/2020-movie_item.php?film_id=1
         z = j.find_all("a")
         for k in z:
             urlforseat.append("https://www.luxcinema.com.tw/web/" + k.get('href'))
+
+    print(date_and_time)
+    print(urlforseat)
 
     return date_and_time, urlforseat
 
@@ -110,14 +116,20 @@ def excute_webcrawler():
         try:
             dic_1 = {'Name': name[i]}
             time, seat_url = get_time(url[i])
+            print(time)
             for index in range(len(time)):
                 dic_1['Time'] = time[index]
                 seat = get_seat_count(seat_url[index])
                 dic_1['seat'] = seat
-                webresult.append(dic_1)
+                webresult.append(dic_1.copy())
                 print(webresult)
 
         except:
             pass
 
+    print(webresult)
     return webresult
+
+
+
+excute_webcrawler()
